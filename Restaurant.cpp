@@ -21,77 +21,7 @@ private:
 #pragma region customSubClasses
 	//TODO NameBST
 	class NameBST {
-		class BSTNode;
-	private:
-		BSTNode* bst;
-		int maxsize;
-		int count;
 
-		class BSTNode {
-		public:
-			BSTNode *left, *right;
-			string name;
-
-			BSTNode() {
-				left = right = nullptr;
-				name = "";
-			}
-			BSTNode(string& name) {
-				left = right = nullptr;
-				this->name = name;
-			}
-			~BSTNode() { delete left; delete right; }
-		};
-	public:
-		NameBST() : bst(nullptr), maxsize(0), count(0) {}
-		NameBST(int SIZE) : bst(nullptr), maxsize(SIZE), count(0) {}
-		~NameBST() {
-			delete bst;
-		}
-
-		bool add(string newName) {
-			if (count == maxsize) return false;
-			if (!bst) {
-				bst = new BSTNode(newName);
-				count++;
-				return true;
-			}
-			
-			BSTNode** p = &bst;
-
-			while ((*p) != nullptr) {
-				if (bst->name == (*p)->name) return false;
-
-				if (bst->name < (*p)->name) {
-					(*p) = bst->left;
-				}
-				else (*p) = bst->right;
-			}
-			
-			(*p) = new BSTNode(newName);
-			count++;
-			return true;
-		}
-
-		//Remove helper
-
-
-		void remove(string newName, BSTNode* root = nullptr) {	
-			BSTNode** p = &root;
-
-			while ((*p) != nullptr) {
-				if (bst->name == (*p)->name) {
-					
-					return;
-				}
-
-				if (bst->name < (*p)->name) {
-					(*p) = (*p)->left;
-				}
-				else (*p) = (*p)->right;
-			}
-			count--;
-		}
 	};
 #pragma endregion
 
