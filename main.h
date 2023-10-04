@@ -6,6 +6,8 @@
 
 using namespace std;
 
+int MAXSIZE;//Supposed to be here?
+
 class Restaurant {
 
 	public:
@@ -18,23 +20,23 @@ class Restaurant {
 		virtual void UNLIMITED_VOID() = 0;
 		virtual void DOMAIN_EXPANSION() = 0;	
 		virtual void LIGHT(int num) = 0;
+	public:
+		class customer {
+		public:	
+			string name;
+			int energy;
+			customer* prev;
+			customer* next;
 		public:
-			class customer {
-			public:	
-				string name;
-				int energy;
-				customer* prev;
-				customer* next;
-			public:
-				customer(){}
-				customer(string na, int e, customer* p, customer *ne): name(na), energy(e), prev(p), next(ne){}
-				~customer(){
-					delete prev;
-					delete next;
-				}
-				void print() {
-					cout << name << "-" << energy << endl;
-				}
-			};
+			customer(){}
+			customer(string na, int e, customer* p, customer *ne): name(na), energy(e), prev(p), next(ne){}
+			~customer(){
+				delete prev;
+				delete next;
+			}
+			void print() {
+				cout << name << "-" << energy << endl;
+			}
+		};
 };
 #endif
