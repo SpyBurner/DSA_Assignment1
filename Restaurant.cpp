@@ -36,7 +36,7 @@ private:
 				left = right = nullptr;
 				name = "";
 			}
-			BSTNode(string name) {
+			BSTNode(string& name) {
 				left = right = nullptr;
 				this->name = name;
 			}
@@ -49,7 +49,49 @@ private:
 			delete bst;
 		}
 
+		bool add(string newName) {
+			if (count == maxsize) return false;
+			if (!bst) {
+				bst = new BSTNode(newName);
+				count++;
+				return true;
+			}
+			
+			BSTNode** p = &bst;
 
+			while ((*p) != nullptr) {
+				if (bst->name == (*p)->name) return false;
+
+				if (bst->name < (*p)->name) {
+					(*p) = bst->left;
+				}
+				else (*p) = bst->right;
+			}
+			
+			(*p) = new BSTNode(newName);
+			count++;
+			return true;
+		}
+
+		//Remove helper
+
+
+		void remove(string newName, BSTNode* root = nullptr) {	
+			BSTNode** p = &root;
+
+			while ((*p) != nullptr) {
+				if (bst->name == (*p)->name) {
+					
+					return;
+				}
+
+				if (bst->name < (*p)->name) {
+					(*p) = (*p)->left;
+				}
+				else (*p) = (*p)->right;
+			}
+			count--;
+		}
 	};
 #pragma endregion
 
