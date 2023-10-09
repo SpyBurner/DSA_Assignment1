@@ -84,6 +84,9 @@ private:
 		int getSize() {
 			return count;
 		}
+		bool empty() {
+			return count == 0;
+		}
 	public:
 		class Node {
 		private:
@@ -105,11 +108,12 @@ private:
 public:	
 	imp_res() {
 		table = lastChange = nullptr;
-		queue = new QueueModified<string>();
+		queue = new QueueModified<customer*>();
 		joinOrder = new QueueModified<string>();
 		queue->maxSize = MAXSIZE;
 		joinOrder->maxSize = 2 * MAXSIZE;
 	};
+
 
 	customer* findHighRES(int energy) {
 		//FROM LAST CHANGE POSITION
@@ -128,7 +132,6 @@ public:
 
 		return CusHighRES;
 	}
-
 	void RED(string name, int energy)
 	{
 		if (energy == 0) return;//Deny normies
@@ -162,10 +165,46 @@ public:
 
 		lastChange = cus;
 	}
-	void BLUE(int num)
-	{
-		cout << "blue "<< num << endl;
+
+	void remove(string name) {//BLUE helper method
+		customer* p;
+		int i = 0;
+		for (p = table; i < count; ++i, p = p->next) {
+			if (p->name == name) break;
+		}
+		
+		if (p) {
+			p->prev->next = p->next;
+			p->next->prev = p->prev;
+
+			if (p->energy > 0) lastChange = p->next;
+			else lastChange = p->prev;
+
+			p->next = p->prev = nullptr;
+			delete p;
+			
+			count--;
+		}
 	}
+	void BLUE(int num){
+		//REMOVE PHASE
+		num = min(num, count);
+		while (!joinOrder->empty() && num--) {
+			//Remove according to joinOrder
+			remove(joinOrder->front());
+			joinOrder->pop();
+		}
+
+		//ADD PHASE
+		while (!queue->empty() && count < MAXSIZE) {
+			customer* cus = queue->front();
+			
+			//ADD COPY
+			RED(cus->name, cus->energy);
+			queue->pop();
+		}
+	}
+
 	void PURPLE()
 	{
 		cout << "purple"<< endl;
