@@ -5,35 +5,113 @@ class imp_res : public Restaurant
 private:
 	customer* table;
 	customer* lastChange;
-
 	int count = 0;
 
-#pragma region customPrivateMethods
-	void lastChange_reset() {//Delete ghost node
-		if (lastChange->energy == 0) {
-			lastChange->prev->next = lastChange->next;
-			lastChange->next->prev = lastChange->prev;
-			delete lastChange;
-		}
-	}
-#pragma endregion
-
 #pragma region customSubClasses
-	//TODO NameBST
-	class NameBST {
+	//TODO Queue
+	template<class T>
+	class QueueModified {
+	public:
+		class Node;
+	private:
+		Node* head;
+		Node* tail;
+		int count;
 
+	public:
+		int maxSize;
+
+		QueueModified() : head(nullptr), tail(nullptr), maxSize(0), count(0) {}
+		bool push(T name) {
+			if (count == maxSize) return false;
+			if (!head) {
+				head = tail = new Node(name);
+			}
+			else {
+				tail->next = new Node(name);
+				tail = tail->next;
+			}
+
+			count++;
+			return true;
+		}
+		bool pop() {
+			if (!head) return false;
+
+			Node* delNode = head;
+			head = head->next;
+
+			delete delNode;
+			count--;
+			return true;
+		}
+		bool removeAt(int index) {
+			if (index < 0 || index >= count) return false;
+
+			if (index == 0) return pop();//Delete head
+
+			Node* p = head;
+			Node* pPre = nullptr;
+			while (index--) {//Delete mid
+				pPre = p;
+				p = p->next;
+			}
+			if (pPre) {
+				pPre->next = p->next;
+			}
+
+			if (index == count - 1) tail = pPre;//Delete tail
+
+			p->next = nullptr;
+			delete p;
+			count--;
+
+			return true;
+		}
+		T front() {
+			return head->data;
+		}
+		int indexOf(T item) {
+			Node* p = head;
+			int i = 0;
+			while (p) {
+				if (p->data == item) return i;
+				i++;
+				p = p->next;
+			}
+			return -1;
+		}
+
+	public:
+		class Node {
+		private:
+			T data;
+			Node* next;
+		public:
+			friend class QueueModified;
+			Node(T data, Node * next = nullptr) {
+				this->data = data;
+				this->next = next;
+			}
+		};
 	};
 #pragma endregion
 
+	QueueModified<string>* queue;
+	QueueModified<string>* joinOrder;
 
 public:	
 	imp_res() {
 		table = lastChange = nullptr;
+		queue = new QueueModified<string>();
+		joinOrder = new QueueModified<string>();
+		queue->maxSize = MAXSIZE;
+		joinOrder->maxSize = 2 * MAXSIZE;
 	};
 
 	void RED(string name, int energy)
 	{
-		if (energy == 0) return;//Deny
+		if (energy == 0) return;//Deny normies
 
 		customer *cus = new customer (name, energy, nullptr, nullptr);
 
@@ -48,7 +126,7 @@ public:
 
 		//If count > MAXSIZE/2
 		if (count >= MAXSIZE) {
-			lastChange_reset();
+			
 			customer* p = table;
 			customer* target = table;
 			int res = cus->energy - table->energy;
