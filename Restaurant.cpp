@@ -81,7 +81,9 @@ private:
 			}
 			return -1;
 		}
-
+		int getSize() {
+			return count;
+		}
 	public:
 		class Node {
 		private:
@@ -97,7 +99,7 @@ private:
 	};
 #pragma endregion
 
-	QueueModified<string>* queue;
+	QueueModified<customer*>* queue;
 	QueueModified<string>* joinOrder;
 
 public:	
@@ -109,54 +111,56 @@ public:
 		joinOrder->maxSize = 2 * MAXSIZE;
 	};
 
+	customer* findHighRES(int energy) {
+		//FROM LAST CHANGE POSITION
+		customer* CusHighRES = lastChange;
+
+		int maxRES = abs(abs(energy) - abs(table->energy));
+		int i = 0;
+
+		for (customer* p = table; i != count; ++i, p = p->next) {
+			int diff = abs(energy - p->energy);//FORUM
+			if (maxRES < diff) {
+				maxRES = diff;
+				CusHighRES = p;
+			}
+		}
+
+		return CusHighRES;
+	}
+
 	void RED(string name, int energy)
 	{
 		if (energy == 0) return;//Deny normies
+		if (joinOrder->indexOf(name) != -1) return;//Check name
+		if (joinOrder->getSize() == 2 * MAXSIZE) return;//Fully full
 
-		customer *cus = new customer (name, energy, nullptr, nullptr);
+		customer* cus = new customer(name, energy, nullptr, nullptr);
 
-		if (!table) { //Table empty
-			table = cus;
-			cus->next = cus->prev = cus; //Cycle, needed?
-			lastChange = cus;
-			return; 
+		count++;
+
+		if (!table) { // Table empty
+			table = lastChange = cus;
+			table->next = table->prev = table; //Cycle
+			return;
 		}
 
-		//TODO check for name
+		if (count == MAXSIZE) queue->push(cus);
 
-		//If count > MAXSIZE/2
-		if (count >= MAXSIZE) {
-			
-			customer* p = table;
-			customer* target = table;
-			int res = cus->energy - table->energy;
+		if (count >= int(MAXSIZE / 2)) lastChange = findHighRES(energy);
 
-			for (int i = 0; i < count; ++i) {
-				if (abs(p->energy - cus->energy) > abs(res)) {
-					res = p->energy - cus->energy;
-					target = p;
-				}
-				p = p->next;
-			}
-
-			lastChange = target;
-		}
-
-		//Insert right
-		if (lastChange->energy <= cus->energy) {
-			cus->prev = lastChange;
+		if (cus->energy >= lastChange->energy) { //Add right
 			cus->next = lastChange->next;
+			cus->prev = lastChange;
 			lastChange->next = cus;
 		}
-		else {//Insert left
-			cus->next = lastChange;
+		else {	//Add left
 			cus->prev = lastChange->prev;
+			cus->next = lastChange;
 			lastChange->prev = cus;
 		}
 
-		lastChange_reset();
 		lastChange = cus;
-		count++;
 	}
 	void BLUE(int num)
 	{
