@@ -79,6 +79,17 @@ private:
 			return true;
 		}
 
+		//TIMEQUEUE ONLY
+		void blueHelper(int num, imp_res* restaurant) {
+			Node* p = head;
+			for (int i = 0; i < count && num; ++i, p = p->next) {
+				if (p->isInTable) {
+					restaurant->tableRemove(p->data);
+					num--;
+				}
+			}
+		}
+
 		Node* front() {
 			return head;
 		}
@@ -101,6 +112,16 @@ private:
 			}
 			return p;
 		}
+		Node* get(customer* target) {
+			Node* p = head;
+			int i = 0;
+			while (p->data->name != target->name && i < count) {
+				i++;
+				p = p->next;
+			}
+			return p;
+		}
+
 
 		int getSize() {
 			return count;
@@ -138,12 +159,15 @@ private:
 			customer* data;
 			Node* next;
 			int joinTime;
+
 		public:
+			bool isInTable;
 			friend class QueueModified;
 			Node(customer* data, int joinTime = 0, Node* next = nullptr) {
 				this->data = new customer(*data);
 				this->joinTime = joinTime;
 				this->next = next;
+				isInTable = false;
 			}
 			customer* getData() {
 				return data;
@@ -170,13 +194,13 @@ private:
 #pragma endregion
 
 	QueueModified* waitQueue;
-	QueueModified* tableQueue;
+	QueueModified* timeQueue;
 
 public:	
 	imp_res() {
 		table = lastChange = nullptr;
 		waitQueue = new QueueModified(MAXSIZE);
-		tableQueue = new QueueModified(MAXSIZE);
+		timeQueue = new QueueModified(2 * MAXSIZE);
 	};
 
 	customer* findHighRES(int energy) {
@@ -201,9 +225,10 @@ public:
 		customer* cus = new customer(name, energy, nullptr, nullptr);
 
 		if (energy == 0) return;//Deny normies
-		if (tableQueue->indexOf(cus) != -1 
-			|| waitQueue->indexOf(cus) != -1) return;//Check name
+		if (timeQueue->indexOf(cus) != -1) return;//Check name
 		if (waitQueue->getSize() == MAXSIZE) return;//Fully full
+
+		timeQueue->push(cus);//Always add to timeline
 
 		if (count == MAXSIZE) {
 			waitQueue->push(cus);
@@ -215,7 +240,6 @@ public:
 		if (!table) { // Table empty
 			table = lastChange = cus;
 			table->next = table->prev = table; //Cycle
-			tableQueue->push(cus);
 			return;
 		}
 
@@ -233,10 +257,10 @@ public:
 		}
 
 		lastChange = cus;
-		tableQueue->push(cus);
+		timeQueue->get(cus)->isInTable = true;
 	}
 
-	void tableRemove(customer* target){
+	bool tableRemove(customer* target){
 		if (!table) return;
 		
 		customer* p = table;
@@ -253,16 +277,18 @@ public:
 			delete p;
 			count--;
 			if (count == 0) table = nullptr;
+
+			return true;
 		}
+		return false;
 	}
 	void BLUE(int num)
 	{
-		while (--num && !tableQueue->empty()) {
-			tableRemove(tableQueue->front()->getData());
-		}
+		timeQueue->blueHelper(num, this);
 
 		while (!waitQueue->empty() && count < MAXSIZE) {
 			customer* cus = waitQueue->front()->getData();
+			timeQueue->get(cus)->isInTable = true;
 			RED(cus->name, cus->energy);
 			waitQueue->pop();
 		}
@@ -320,4 +346,8 @@ public:
 		{
 			cout << "light " << num << endl;
 		}
+
+	void tablePrint() {
+		
+	}
 };
