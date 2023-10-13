@@ -77,6 +77,10 @@ private:
 
 			return true;
 		}
+		void clear() {
+			count = joinTime = 0;
+			while (count) pop();
+		}
 
 		//TIMEQUEUE ONLY
 		void blueHelper(int num, imp_res* restaurant) {
@@ -127,25 +131,16 @@ private:
 			return count == 0;
 		}
 
+		//REVERSAL
 		int findMaxAbsIndex() {
 			Node* p = head;
 			int resIndex = 0;
 			Node* resNode = head;
 
 			int i = 0;
-			for (; i < count; i++, p = p->next) {//NOT THE SAME AS Node::operator<
-				bool choose = false;
-				int pEnergy = abs(p->getData()->energy);
-				int resEnergy = abs(resNode->getData()->energy);
-				if (pEnergy == resEnergy) {
-					if (p->getJoinTime() > resNode->getJoinTime()){
-						choose = true;
-					}
-				}
-				else if (pEnergy > resEnergy) {
-					choose = true;
-				}
-				if (choose) {
+			for (; i < count; i++, p = p->next) {
+				//follows forum
+				if (resNode < p) {
 					resNode = p;
 					resIndex = i;
 				}
@@ -153,6 +148,32 @@ private:
 
 			return resIndex;
 		}
+
+		//DOMAINEXPANSION
+		//TIMEQUEUE ONLY
+		int energySum(bool positive = true) {
+			//positive -> calculate sum of sorcerers
+			int sum = 0;
+
+			int one = -1;
+			if (positive) one = 1;
+
+			for (Node* p = head; p != nullptr; p = p->next)
+				if (one * p->getData()->energy > 0) sum += p->getData()->energy;
+			
+
+			return sum * one;
+		}
+
+		void domain_expansion(bool positive, imp_res* restaurant, QueueModified* waitQueue) {
+			//positive -> remove sorcerers
+			int one = -1;
+			if (positive) one = 1;
+
+
+
+		}
+		//
 
 	public:
 		class Node {
@@ -312,7 +333,9 @@ public:
 				QueueModified::Node* nodej = waitQueue->get(j);
 				QueueModified::Node* nodejsubIncr = waitQueue->get(j - incr);
 
+				//follow forum
 				if (!(nodej < nodejsubIncr)) break;
+
 				swapCount++;
 				QueueModified::Node::swap(nodej, nodejsubIncr);
 			}
@@ -379,18 +402,69 @@ public:
 	}
 	void REVERSAL()
 	{
-		if (count <= 1) return;
-
+		if (count <= 2) return;
 		tableReverse();
 	}
 
+	void tableVoidPrint(customer* start, customer* end, int maxLen) {
+		customer* pMin = start;
+		customer* p = start;
+		for (int i = 0; i < maxLen; ++i, p = p->next) {
+			//Get first equal
+			if (p->energy < pMin->energy) pMin = p;
+		}
+
+		p = pMin;
+		for (int i = 0; i < maxLen; ++i, p = p->next) {
+			if (p == nullptr) p = start;
+			p->print();
+		}
+	}
 	void UNLIMITED_VOID()
 	{
 		if (count < 4) return;
+		int minSum = INT32_MAX;
+		int maxLen = 0;
+
+		int sum = 0;
+		int len = 0;
+		customer* start, * end;
+		start = end = nullptr;
+
+		int i = 0;
+		for (customer* pI = lastChange; i < count; ++i, pI = pI->next) {
+			sum = len = 0;
+			int j = 0;
+			for (customer* pJ = pI; j < count; ++j, pJ = pJ->next) {
+				sum += pJ->energy;
+				len++;
+				bool choose = false;
+				if (len >= 4) {
+					if (sum == minSum && len >= maxLen) choose = true;
+					if (sum < minSum) choose = true;
+					if (choose) {
+						start = pI; end = pJ;
+						minSum = sum;
+						maxLen = len;
+					}
+				}
+			}
+		}
+
+		tableVoidPrint(start, end, maxLen);
 	}
+
 	void DOMAIN_EXPANSION()
 	{
-		cout << "domain_expansion" << endl;
+		//Find sum of both sides
+		//Remove in all containers according to timeQueue 
+		//Add new customers to table if avaiable
+		//Print removed in descending joinTime (recursive);
+
+		int sorcerersSum = timeQueue->energySum();
+		int spiritsSum = abs(timeQueue->energySum(false));
+
+		timeQueue->domain_expansion(sorcerersSum < spiritsSum, this, waitQueue);
 	}
 	void LIGHT(int num)
 		{
