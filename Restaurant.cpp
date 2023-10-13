@@ -133,17 +133,19 @@ private:
 			Node* resNode = head;
 
 			int i = 0;
-			for (; i < count; i++, p = p->next) {
+			for (; i < count; i++, p = p->next) {//NOT THE SAME AS Node::operator<
 				bool choose = false;
-				if (p->getData()->energy == resNode->getData()->energy) {
+				int pEnergy = abs(p->getData()->energy);
+				int resEnergy = abs(resNode->getData()->energy);
+				if (pEnergy == resEnergy) {
 					if (p->getJoinTime() > resNode->getJoinTime()){
 						choose = true;
 					}
 				}
-				else if (p->getData()->energy > resNode->getData()->energy) {
+				else if (pEnergy > resEnergy) {
 					choose = true;
 				}
-				if (choose) {
+				if (resNode < p) {
 					resNode = p;
 					resIndex = i;
 				}
@@ -177,7 +179,7 @@ private:
 
 			bool operator<(Node* other) {
 				if (other->data->energy == this->data->energy) {
-					return this->joinTime > other->joinTime;
+					return this->joinTime < other->joinTime;
 				}
 				else {
 					return this->data->energy < other->data->energy;
@@ -329,7 +331,6 @@ public:
 		return swapCount;
 	}
 #pragma endregion
-
 	void PURPLE()
 	{
 		int N = shellSort();
@@ -337,17 +338,55 @@ public:
 		BLUE(N);
 	}
 
+	void tableSwap(customer* cus1, customer* cus2) {//SWAP next/prev ONLY
+		customer temp;
+		temp.next = cus1->next;
+		temp.prev = cus1->prev;
+		
+		cus1->next = cus2->next;
+		cus1->prev = cus2->prev;
+
+		cus2->next = temp.next;
+		cus2->prev = temp.prev;
+
+		temp.next = temp.prev = nullptr;
+	}
+	void tableReverse(bool positive = true) {
+		int one = 1;
+		if (!positive) one = -1;
+
+		customer* pCCW = lastChange->prev;
+		customer* pCW = lastChange->next;
+
+		int i = 1;
+		while (i <= count) {
+			while (one * pCCW->energy < 0) {
+				pCCW = pCCW->prev;
+				i++;
+			}
+			while (one * pCW->energy < 0) {
+				pCW = pCW->next;
+				i++;
+			}
+
+			tableSwap(pCCW, pCW);
+			pCCW = pCCW->prev;
+			pCW = pCW->next;
+			i += 2;
+		}
+
+		if (positive) tableReverse(false);
+	}
 	void REVERSAL()
 	{
 		if (count <= 1) return;
 
-		QueueModified* sorcerers = new QueueModified(MAXSIZE);
-		QueueModified* spirits = new QueueModified(MAXSIZE);
-		customer* p = lastChange;
+		tableReverse();
 	}
+
 	void UNLIMITED_VOID()
 	{
-		cout << "unlimited_void" << endl;
+		if (count < 4) return;
 	}
 	void DOMAIN_EXPANSION()
 	{
