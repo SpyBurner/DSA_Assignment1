@@ -145,7 +145,7 @@ private:
 				else if (pEnergy > resEnergy) {
 					choose = true;
 				}
-				if (resNode < p) {
+				if (choose) {
 					resNode = p;
 					resIndex = i;
 				}
