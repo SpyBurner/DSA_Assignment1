@@ -3,7 +3,6 @@
 class imp_res : public Restaurant
 {
 private:
-	customer* table;
 	customer* lastChange;
 	int count = 0;
 	int swapCount = 0;
@@ -28,14 +27,14 @@ private:
 			maxSize = MAXSIZE;
 		}
 
-		bool push(customer* cus) {
-			customer* newCus = new customer(*cus);
+		bool push(customer* target) {
+			customer* cus = new customer(*target);
 			if (count == 2 * maxSize) return false;
 			if (!head) {
-				head = tail = new Node(newCus, joinTime++);
+				head = tail = new Node(cus, joinTime++);
 			}
 			else {
-				tail->next = new Node(newCus, joinTime++);
+				tail->next = new Node(cus, joinTime++);
 				tail = tail->next;
 			}
 
@@ -82,11 +81,9 @@ private:
 		//TIMEQUEUE ONLY
 		void blueHelper(int num, imp_res* restaurant) {
 			Node* p = head;
-			for (int i = 0; i < count && num; ++i, p = p->next) {
-				if (p->isInTable) {
-					restaurant->tableRemove(p->data);
-					num--;
-				}
+			int i = 0;
+			for (; p != nullptr; ++i, p = p->next) {
+
 			}
 		}
 
@@ -198,7 +195,7 @@ private:
 
 public:	
 	imp_res() {
-		table = lastChange = nullptr;
+		lastChange = nullptr;
 		waitQueue = new QueueModified(MAXSIZE);
 		timeQueue = new QueueModified(2 * MAXSIZE);
 	};
@@ -207,10 +204,10 @@ public:
 		//FROM LAST CHANGE POSITION
 		customer* CusHighRES = lastChange;
 
-		int maxRES = abs(abs(energy) - abs(table->energy));
+		int maxRES = abs(abs(energy) - abs(lastChange->energy));
 		int i = 0;
 
-		for (customer* p = table; i != count; ++i, p = p->next) {
+		for (customer* p = lastChange; i != count; ++i, p = p->next) {
 			int diff = abs(energy - p->energy);//FORUM
 			if (maxRES < diff) {
 				maxRES = diff;
@@ -220,30 +217,16 @@ public:
 
 		return CusHighRES;
 	}
-	void RED(string name, int energy)
-	{
-		customer* cus = new customer(name, energy, nullptr, nullptr);
-
-		if (energy == 0) return;//Deny normies
-		if (timeQueue->indexOf(cus) != -1) return;//Check name
-		if (waitQueue->getSize() == MAXSIZE) return;//Fully full
-
-		timeQueue->push(cus);//Always add to timeline
-
-		if (count == MAXSIZE) {
-			waitQueue->push(cus);
-			return;
-		}
-
+	void addToTable(customer* cus) {
 		count++;
 
-		if (!table) { // Table empty
-			table = lastChange = cus;
-			table->next = table->prev = table; //Cycle
+		if (!lastChange) { // Table empty
+			lastChange = cus;
+			lastChange->next = lastChange->prev = lastChange; //Cycle
 			return;
 		}
 
-		if (count >= int(MAXSIZE / 2)) lastChange = findHighRES(energy);
+		if (count >= int(MAXSIZE / 2)) lastChange = findHighRES(cus->energy);
 
 		if (cus->energy >= lastChange->energy) { //Add right
 			cus->next = lastChange->next;
@@ -259,11 +242,26 @@ public:
 		lastChange = cus;
 		timeQueue->get(cus)->isInTable = true;
 	}
+	void RED(string name, int energy){
+		customer* cus = new customer(name, energy, nullptr, nullptr);
+
+		if (energy == 0) return;//Deny normies
+		if (timeQueue->indexOf(cus) != -1) return;//Check name
+		if (waitQueue->getSize() == MAXSIZE) return;//Fully full
+
+		timeQueue->push(cus);//Always add to timeline
+
+		if (count == MAXSIZE) {
+			waitQueue->push(cus);
+			return;
+		}
+		addToTable(cus);
+	}
 
 	bool tableRemove(customer* target){
-		if (!table) return;
+		if (!lastChange) return;
 		
-		customer* p = table;
+		customer* p = lastChange;
 		int i = 0;
 
 		for (int i = 0; i < count; ++i, p = p->next) {
@@ -271,13 +269,19 @@ public:
 		}
 
 		if (p) {
+			count--;
+			//SET NEW LASTCHANGE
+			if (count == 0) lastChange = nullptr;
+			else {
+				if (p->energy > 0) lastChange = p->next;
+				else lastChange = p->prev;
+			}
+
 			p->next->prev = p->prev;
 			p->prev->next = p->next;
 			p->next = p->prev = nullptr;
 			delete p;
-			count--;
-			if (count == 0) table = nullptr;
-
+				
 			return true;
 		}
 		return false;
@@ -287,9 +291,8 @@ public:
 		timeQueue->blueHelper(num, this);
 
 		while (!waitQueue->empty() && count < MAXSIZE) {
-			customer* cus = waitQueue->front()->getData();
-			timeQueue->get(cus)->isInTable = true;
-			RED(cus->name, cus->energy);
+			customer* cus = new customer(*(waitQueue->front()->getData()));
+			addToTable(cus);//BY PASS RED CHECK
 			waitQueue->pop();
 		}
 	}
