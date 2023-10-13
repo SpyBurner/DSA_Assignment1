@@ -60,10 +60,11 @@ private:
 
 			Node* p = head;
 			Node* pPre = nullptr;
-			int i = index;
-			while (i++) {//Delete mid
+			int i = 0;
+			while (i < index) {//Delete mid
 				pPre = p;
 				p = p->next;
+				i++;
 			}
 			if (pPre) {
 				pPre->next = p->next;
@@ -77,18 +78,32 @@ private:
 
 			return true;
 		}
+		bool removeItem(customer* target) {
+			if (head->data->name == target->name) return pop();//Delete head
+
+			Node* p = head;
+			Node* pPre = nullptr;
+			int i = 0;
+			while (i < count && p->data->name != target->name) {//Delete mid
+				pPre = p;
+				p = p->next;
+				i++;
+			}
+			if (pPre) {
+				pPre->next = p->next;
+			}
+
+			if (i == count - 1) tail = pPre;//Delete tail
+
+			p->next = nullptr;
+			delete p;
+			count--;
+
+			return true;
+		}
 		void clear() {
 			count = joinTime = 0;
 			while (count) pop();
-		}
-
-		//TIMEQUEUE ONLY
-		void blueHelper(int num, imp_res* restaurant) {
-			Node* p = head;
-			int i = 0;
-			for (; p != nullptr; ++i, p = p->next) {
-
-			}
 		}
 
 		Node* front() {
@@ -131,6 +146,15 @@ private:
 			return count == 0;
 		}
 
+		//TIMEQUEUE ONLY
+		void blueHelper(int num, imp_res* restaurant) {
+			Node* p = head;
+			int i = 0;
+			for (; p != nullptr; ++i, p = p->next) {
+
+			}
+		}
+
 		//REVERSAL
 		int findMaxAbsIndex() {
 			Node* p = head;
@@ -159,22 +183,37 @@ private:
 			if (positive) one = 1;
 
 			for (Node* p = head; p != nullptr; p = p->next)
-				if (one * p->getData()->energy > 0) sum += p->getData()->energy;
+				if (one * p->data->energy > 0) sum += p->data->energy;
 			
-
 			return sum * one;
 		}
 
-		void domain_expansion(bool positive, imp_res* restaurant, QueueModified* waitQueue) {
+		void domain_expansion(Node* p, bool positive, 
+			imp_res* restaurant, QueueModified* waitQueue) {
 			//positive -> remove sorcerers
+			if (!p) return;
+			domain_expansion(p->next, positive, restaurant, waitQueue);
+
 			int one = -1;
 			if (positive) one = 1;
 
+			if (one * p->data->energy > 0) {
+				p->data->print();//Print customer
 
-
+				//Remove customer from all containers
+				restaurant->tableRemove(p->data);
+				waitQueue->removeItem(p->data);
+				this->removeItem(p->data);
+			}
 		}
 		//
 
+		//LIGHT
+		void print(){
+			for (Node* p = head; p != nullptr; p = p->next) {
+				p->data->print();
+			}
+		}
 	public:
 		class Node {
 		private:
@@ -284,7 +323,7 @@ public:
 	}
 
 	bool tableRemove(customer* target){
-		if (!lastChange) return;
+		if (!lastChange) return false;
 		
 		customer* p = lastChange;
 		int i = 0;
@@ -461,15 +500,26 @@ public:
 		//Add new customers to table if avaiable
 		//Print removed in descending joinTime (recursive);
 
-		int sorcerersSum = timeQueue->energySum();
+		int sorcerersSum = timeQueue->energySum(true);
 		int spiritsSum = abs(timeQueue->energySum(false));
-
-		timeQueue->domain_expansion(sorcerersSum < spiritsSum, this, waitQueue);
+		// sorcerer < spirit == true -> remove sorcerer
+		timeQueue->domain_expansion(timeQueue->front(), 
+			sorcerersSum < spiritsSum, this, waitQueue);
 	}
-	void LIGHT(int num)
-		{
-			cout << "light " << num << endl;
+
+
+	void tablePrint(bool cw) {
+		customer* p = lastChange;
+		for (int i = 0; i < count; ++i) {
+			p->print();
+			if (cw) p = p->next;
+			else p = p->prev;
 		}
+	}
+	void LIGHT(int num){
+		if (num != 0) tablePrint(num > 0);
+		else waitQueue->print();
+	}
 
 	void tablePrint() {
 		
