@@ -6,10 +6,10 @@ private:
 	customer* table;
 	customer* lastChange;
 	int count = 0;
+	int swapCount = 0;
 
 #pragma region customSubClasses
 	//TODO Queue
-	template<class T>
 	class QueueModified {
 	public:
 		class Node;
@@ -17,30 +17,39 @@ private:
 		Node* head;
 		Node* tail;
 		int count;
-
-	public:
 		int maxSize;
 
-		QueueModified() : head(nullptr), tail(nullptr), maxSize(0), count(0) {}
-		bool push(T name) {
-			if (count == maxSize) return false;
+		int joinTime;
+	public:
+
+		QueueModified(int MAXSIZE) {
+			head = tail = nullptr;
+			count = joinTime = 0;
+			maxSize = MAXSIZE;
+		}
+
+		bool push(customer* cus) {
+			customer* newCus = new customer(*cus);
+			if (count == 2 * maxSize) return false;
 			if (!head) {
-				head = tail = new Node(name);
+				head = tail = new Node(newCus, joinTime++);
 			}
 			else {
-				tail->next = new Node(name);
+				tail->next = new Node(newCus, joinTime++);
 				tail = tail->next;
 			}
 
 			count++;
 			return true;
-		}
+		}//Push deep copy
+
 		bool pop() {
 			if (!head) return false;
 
 			Node* delNode = head;
 			head = head->next;
 
+			delNode->next = nullptr;
 			delete delNode;
 			count--;
 			return true;
@@ -52,7 +61,8 @@ private:
 
 			Node* p = head;
 			Node* pPre = nullptr;
-			while (index--) {//Delete mid
+			int i = index;
+			while (i++) {//Delete mid
 				pPre = p;
 				p = p->next;
 			}
@@ -68,47 +78,105 @@ private:
 
 			return true;
 		}
-		T front() {
-			return head->data;
+
+		Node* front() {
+			return head;
 		}
-		int indexOf(T item) {
+		int indexOf(customer* target) {
 			Node* p = head;
 			int i = 0;
-			while (p) {
-				if (p->data == item) return i;
+			while (p && i < count) {
+				if (p->data->name == target->name) return i;
 				i++;
 				p = p->next;
 			}
 			return -1;
 		}
+		Node* get(int index) {
+			Node* p = head;
+			int i = 0;
+			while (p && i < index) {
+				i++;
+				p = p->next;
+			}
+			return p;
+		}
+
 		int getSize() {
 			return count;
 		}
+		bool empty() {
+			return count == 0;
+		}
+
+		int findMaxAbsIndex() {
+			Node* p = head;
+			int resIndex = 0;
+			Node* resNode = head;
+
+			int i = 0;
+			for (; i < count; i++, p = p->next) {
+				bool choose = false;
+				if (p->getData()->energy == resNode->getData()->energy) {
+					if (p->getJoinTime() > resNode->getJoinTime()){
+						choose = true;
+					}
+				}
+				else if (p->getData()->energy > resNode->getData()->energy) {
+					choose = true;
+				}
+				resNode = p;
+				resIndex = i;
+			}
+
+			return resIndex;
+		}
+
 	public:
 		class Node {
 		private:
-			T data;
+			customer* data;
 			Node* next;
+			int joinTime;
 		public:
 			friend class QueueModified;
-			Node(T data, Node * next = nullptr) {
-				this->data = data;
+			Node(customer* data, int joinTime = 0, Node* next = nullptr) {
+				this->data = new customer(*data);
+				this->joinTime = joinTime;
 				this->next = next;
+			}
+			customer* getData() {
+				return data;
+			}
+			int getJoinTime() {
+				return joinTime;
+			}
+
+			bool operator<(Node* other) {
+				if (other->data->energy == this->data->energy) {
+					return this->joinTime > other->joinTime;
+				}
+				else {
+					return this->data->energy < other->data->energy;
+				}
+			}
+			static void swap(Node* nodei, Node* nodej) {//Only swap data
+				customer* cusTemp = nodei->data;
+				nodei->data = nodej->data;
+				nodej->data = cusTemp;
 			}
 		};
 	};
 #pragma endregion
 
-	QueueModified<customer*>* queue;
-	QueueModified<string>* joinOrder;
+	QueueModified* waitQueue;
+	QueueModified* tableQueue;
 
 public:	
 	imp_res() {
 		table = lastChange = nullptr;
-		queue = new QueueModified<string>();
-		joinOrder = new QueueModified<string>();
-		queue->maxSize = MAXSIZE;
-		joinOrder->maxSize = 2 * MAXSIZE;
+		waitQueue = new QueueModified(MAXSIZE);
+		tableQueue = new QueueModified(MAXSIZE);
 	};
 
 	customer* findHighRES(int energy) {
@@ -128,24 +196,28 @@ public:
 
 		return CusHighRES;
 	}
-
 	void RED(string name, int energy)
 	{
-		if (energy == 0) return;//Deny normies
-		if (joinOrder->indexOf(name) != -1) return;//Check name
-		if (joinOrder->getSize() == 2 * MAXSIZE) return;//Fully full
-
 		customer* cus = new customer(name, energy, nullptr, nullptr);
+
+		if (energy == 0) return;//Deny normies
+		if (tableQueue->indexOf(cus) != -1 
+			|| waitQueue->indexOf(cus) != -1) return;//Check name
+		if (waitQueue->getSize() == MAXSIZE) return;//Fully full
+
+		if (count == MAXSIZE) {
+			waitQueue->push(cus);
+			return;
+		}
 
 		count++;
 
 		if (!table) { // Table empty
 			table = lastChange = cus;
 			table->next = table->prev = table; //Cycle
+			tableQueue->push(cus);
 			return;
 		}
-
-		if (count == MAXSIZE) queue->push(cus);
 
 		if (count >= int(MAXSIZE / 2)) lastChange = findHighRES(energy);
 
@@ -161,14 +233,76 @@ public:
 		}
 
 		lastChange = cus;
+		tableQueue->push(cus);
+	}
+
+	void tableRemove(customer* target){
+		if (!table) return;
+		
+		customer* p = table;
+		int i = 0;
+
+		for (int i = 0; i < count; ++i, p = p->next) {
+			if (p->name == target->name) break;
+		}
+
+		if (p) {
+			p->next->prev = p->prev;
+			p->prev->next = p->next;
+			p->next = p->prev = nullptr;
+			delete p;
+			count--;
+			if (count == 0) table = nullptr;
+		}
 	}
 	void BLUE(int num)
 	{
-		cout << "blue "<< num << endl;
+		while (--num && !tableQueue->empty()) {
+			tableRemove(tableQueue->front()->getData());
+		}
+
+		while (!waitQueue->empty() && count < MAXSIZE) {
+			customer* cus = waitQueue->front()->getData();
+			RED(cus->name, cus->energy);
+			waitQueue->pop();
+		}
 	}
+
+
+#pragma region shellsort
+
+	void inssort2(int n, int incr) {
+		for (int i = incr; i < n; i += incr)
+			for (int j = i; (j >= incr); j -= incr) {
+				//Stop when j-incr <= j
+				QueueModified::Node* nodej = waitQueue->get(j);
+				QueueModified::Node* nodejsubIncr = waitQueue->get(j - incr);
+
+				if (!(nodej < nodejsubIncr)) break;
+				swapCount++;
+				QueueModified::Node::swap(nodej, nodejsubIncr);
+			}
+	}
+
+	int shellSort() {
+		swapCount = 0;
+
+		int n = waitQueue->findMaxAbsIndex() + 1;
+
+		for (int i = n / 2; i > 2; i /= 2) // For each increment
+			for (int j = 0; j < i; j++) // Sort each sublist
+				inssort2(n - j, i);
+		inssort2(n, 1);
+
+		return swapCount;
+	}
+#pragma endregion
+
 	void PURPLE()
 	{
-		cout << "purple"<< endl;
+		int N = shellSort();
+
+		BLUE(N);
 	}
 	void REVERSAL()
 	{
