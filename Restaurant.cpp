@@ -28,7 +28,7 @@ private:
 		}
 
 		bool push(customer* target) {
-			customer* cus = new customer(*target);
+			customer* cus = new customer(target->name, target->energy, nullptr, nullptr);
 			if (count == 2 * maxSize) return false;
 			if (!head) {
 				head = tail = new Node(cus, joinTime++);
@@ -143,8 +143,10 @@ private:
 				else if (p->getData()->energy > resNode->getData()->energy) {
 					choose = true;
 				}
-				resNode = p;
-				resIndex = i;
+				if (choose) {
+					resNode = p;
+					resIndex = i;
+				}
 			}
 
 			return resIndex;
@@ -291,7 +293,8 @@ public:
 		timeQueue->blueHelper(num, this);
 
 		while (!waitQueue->empty() && count < MAXSIZE) {
-			customer* cus = new customer(*(waitQueue->front()->getData()));
+			customer* p = waitQueue->front()->getData();
+			customer* cus = new customer(p->name, p->energy, nullptr, nullptr);
 			addToTable(cus);//BY PASS RED CHECK
 			waitQueue->pop();
 		}
@@ -333,9 +336,14 @@ public:
 
 		BLUE(N);
 	}
+
 	void REVERSAL()
 	{
-		cout << "reversal" << endl;
+		if (count <= 1) return;
+
+		QueueModified* sorcerers = new QueueModified(MAXSIZE);
+		QueueModified* spirits = new QueueModified(MAXSIZE);
+		customer* p = lastChange;
 	}
 	void UNLIMITED_VOID()
 	{
