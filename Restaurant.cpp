@@ -5,6 +5,8 @@ class imp_res : public Restaurant
 private:
 	customer* lastChange;
 	int count = 0;
+
+	//Shellsort only
 	int swapCount = 0;
 
 #pragma region customSubClasses
@@ -277,11 +279,11 @@ public:
 		//FROM LAST CHANGE POSITION
 		customer* CusHighRES = lastChange;
 
-		int maxRES = abs(abs(energy) - abs(lastChange->energy));
+		int maxRES = abs(energy - lastChange->energy);
 		int i = 0;
 
-		for (customer* p = lastChange; i != count; ++i, p = p->next) {
-			int diff = abs(energy - p->energy);//FORUM
+		for (customer* p = lastChange; i < count; ++i, p = p->next) {
+			int diff = abs(p->energy - energy);//FORUM
 			if (maxRES < diff) {
 				maxRES = diff;
 				CusHighRES = p;
@@ -291,7 +293,6 @@ public:
 		return CusHighRES;
 	}
 	void addToTable(customer* cus) {
-		count++;
 		timeQueue->get(cus)->isInTable = true;
 
 		if (!lastChange) { // Table empty
@@ -317,6 +318,7 @@ public:
 			}
 		}
 
+		count++;
 		lastChange = cus;
 		timeQueue->get(cus)->isInTable = true;
 
@@ -367,6 +369,7 @@ public:
 	}
 	void BLUE(int num)
 	{
+		if (!num) return;
 		timeQueue->blueHelper(num, this);
 
 		while (!waitQueue->empty() && count < MAXSIZE) {
@@ -384,14 +387,14 @@ public:
 		for (int i = incr; i < n; i += incr)
 			for (int j = i; (j >= incr); j -= incr) {
 				//Stop when j-incr <= j
-				QueueModified::Node* nodej = waitQueue->get(j);
-				QueueModified::Node* nodejsubIncr = waitQueue->get(j - incr);
+				QueueModified::Node* nodeAfter = waitQueue->get(j - incr);
+				QueueModified::Node* nodeBefore = waitQueue->get(j);
 
 				//follow forum
-				if (!(nodej < nodejsubIncr)) break;
+				if (!(nodeAfter < nodeBefore)) break;
 
 				swapCount++;
-				QueueModified::Node::swap(nodej, nodejsubIncr);
+				QueueModified::Node::swap(nodeAfter, nodeBefore);
 			}
 	}
 
