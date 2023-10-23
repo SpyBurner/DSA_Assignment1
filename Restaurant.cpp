@@ -16,20 +16,18 @@ private:
 		Node* head;
 		Node* tail;
 		int count;
-		int maxSize;
 
 		int joinTime;
 	public:
 
-		QueueModified(int MAXSIZE) {
-			head = tail = nullptr;
-			count = joinTime = 0;
-			maxSize = MAXSIZE;
+		QueueModified() {
+			this->head = this->tail = nullptr;
+			this->count = this->joinTime = 0;
 		}
 
 		bool push(customer* target) {
 			customer* cus = new customer(target->name, target->energy, nullptr, nullptr);
-			if (count == 2 * maxSize) return false;
+			if (count == 2 * MAXSIZE) return false;
 			if (!head) {
 				head = tail = new Node(cus, joinTime++);
 			}
@@ -79,6 +77,7 @@ private:
 			return true;
 		}
 		bool removeItem(customer* target) {
+			if (!head) return false;
 			if (head->data->name == target->name) return pop();//Delete head
 
 			Node* p = head;
@@ -260,8 +259,8 @@ private:
 public:	
 	imp_res() {
 		lastChange = nullptr;
-		waitQueue = new QueueModified(MAXSIZE);
-		timeQueue = new QueueModified(2 * MAXSIZE);
+		waitQueue = new QueueModified();
+		timeQueue = new QueueModified();
 	};
 
 	customer* findHighRES(int energy) {
