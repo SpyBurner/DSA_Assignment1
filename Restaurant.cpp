@@ -439,46 +439,39 @@ public:
 		int one = -1;
 		if (positive) one = 1;
 
-		cout << "solving for positive: " << positive << endl;
-
-		customer* pCCW = lastChange;
-		customer* pCW = lastChange->next;
+		customer* pCClock = lastChange;
+		customer* pClock = lastChange->next;
 
 		customer* saveLastChange = lastChange;
 
-		int i = 1;
-		while (i < count) {
-			while (one * pCCW->energy < 0 && i < count) {
-				pCCW = pCCW->prev;
-				i++;
+		int done = 0;
+		while (done < count) {
+			while (one * pCClock->energy < 0 && done < count) {
+				done++;
+				pCClock = pCClock->prev;
 			}
-			cout << "pCCW: " << i << endl;
-			while (one * pCW->energy < 0 && i < count) {
-				pCW = pCW->next;
-				i++;
+			while (one * pClock->energy < 0 && done < count) {
+				done++;
+				pClock = pClock->next;
 			}
-			cout << "pCW: " << i << endl;
 
-			if (pCW->prev == pCCW) break;
+			if (done >= count) break;
 
-			tableSwap(pCCW, pCW);
-			
-			if (pCW == lastChange) lastChange = pCCW;
-			if (pCCW == lastChange) lastChange = pCW;
+			if (pCClock == lastChange) lastChange = pClock;
+			if (pClock == lastChange) lastChange = pCClock;
 
-			cout << pCW->name << " " << pCCW->name << endl;
-			cout << lastChange->name << endl;
-			//Nodes swaped -> swap next and prev
-			customer* temp = pCW->prev;
-			pCW = pCCW->next;
-			pCCW = temp;
+			customer* pCCAdvance = pCClock->prev;
+			customer* pCAdvance = pClock->next;
 
-			i += 2;
+			tableSwap(pCClock, pClock);
+
+			//advance after swap:
+			done += 2;
+			pCClock = pCCAdvance;
+			pClock = pCAdvance;
 		}
 
-		if (positive) {
-			tableReverse(false);
-		}
+		if (positive) tableReverse(false);
 		lastChange = saveLastChange;
 	}
 	void REVERSAL()
