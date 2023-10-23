@@ -26,6 +26,9 @@ private:
 			this->head = this->tail = nullptr;
 			this->count = this->joinTime = 0;
 		}
+		~QueueModified(){
+			while (count) removeAt(0);
+		}
 
 		bool push(customer* target) {
 			customer* cus = new customer(target->name, target->energy, nullptr, nullptr);
@@ -90,6 +93,7 @@ private:
 				p = p->next;
 				i++;
 			}
+
 			if (pPre) {
 				pPre->next = p->next;
 			}
@@ -162,8 +166,6 @@ private:
 					Node* toDelete = p;
 					
 					restaurant->tableRemove(toDelete->data);
-					restaurant->waitQueue->removeItem(toDelete->data);
-
 					p = p->next;
 					this->removeItem(toDelete->data);
 
@@ -248,6 +250,7 @@ private:
 				this->next = next;
 				isInTable = false;
 			}
+			~Node(){ delete data; next = nullptr;}
 			customer* getData() {
 				return data;
 			}
@@ -277,6 +280,11 @@ public:
 		waitQueue = new QueueModified();
 		timeQueue = new QueueModified();
 	};
+	~imp_res(){
+		tableClear(lastChange);
+		delete waitQueue;
+		delete timeQueue;
+	}
 
 	customer* findHighRES(int energy) {
 		//FROM LAST CHANGE POSITION
@@ -344,6 +352,13 @@ public:
 		addToTable(cus);
 	}
 
+	void tableClear(customer* lastChange){
+		if (!lastChange) return;
+		tableClear(lastChange->next);
+
+		lastChange->next = lastChange->prev = nullptr;
+		delete lastChange;
+	}
 	bool tableRemove(customer* target){
 		if (!lastChange) return false;
 		
@@ -383,7 +398,6 @@ public:
 		}
 	}
 
-
 #pragma region shellsort
 
 	void inssort2(int n, int incr) {
@@ -394,7 +408,8 @@ public:
 				QueueModified::Node* nodej = waitQueue->get(j);
 
 				//follow forum, compare abs
-				if (nodej >= nodejSub) break;
+				// if (!(nodej < nodejSub)) break;
+				if (!nodej->operator<(nodejSub)) break;
 
 				swapCount++;
 				waitQueue->swap(nodejSub, nodej);
