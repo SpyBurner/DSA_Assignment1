@@ -4,6 +4,8 @@
 #include <string>
 #include <math.h>
 
+#define dbg(a) cout << a << endl;
+
 static int MAXSIZE;
 
 using namespace std;

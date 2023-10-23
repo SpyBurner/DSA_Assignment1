@@ -418,22 +418,20 @@ public:
 	void tableSwap(customer* cus1, customer* cus2) {//SWAP next/prev ONLY
 		if (cus1 == cus2) return;//Same node
 
-		if (cus1->prev) cus1->prev->next = cus2;
-		if (cus2->prev) cus2->prev->next = cus1;
-
-		if (cus1->next) cus1->next->prev = cus2;
-		if (cus2->next) cus2->next->prev = cus1;
-
-		customer* temp;
-		temp = cus1->prev;
+		customer* temp = cus1->prev;
 		cus1->prev = cus2->prev;
 		cus2->prev = temp;
 
+		cus1->prev->next = cus1;
+		cus2->prev->next = cus2;
+
+	
 		temp = cus1->next;
 		cus1->next = cus2->next;
 		cus2->next = temp;
 
-		temp = nullptr;
+		cus1->next->prev = cus1;
+		cus2->next->prev = cus2;
 	}
 	void tableReverse(bool positive = true) {
 		int one = -1;
@@ -443,8 +441,7 @@ public:
 		customer* pClock = lastChange->next;
 
 		customer* saveLastChange = lastChange;
-
-		int done = 0;
+		int done = 1;
 		while (done < count) {
 			while (one * pCClock->energy < 0 && done < count) {
 				done++;
@@ -457,13 +454,13 @@ public:
 
 			if (done >= count) break;
 
-			if (pCClock == lastChange) lastChange = pClock;
-			if (pClock == lastChange) lastChange = pCClock;
-
 			customer* pCCAdvance = pCClock->prev;
 			customer* pCAdvance = pClock->next;
 
 			tableSwap(pCClock, pClock);
+
+			if (pCClock == lastChange) lastChange = pClock;
+			else if (pClock == lastChange) lastChange = pCClock;
 
 			//advance after swap:
 			done += 2;
@@ -559,9 +556,5 @@ public:
 	void LIGHT(int num){
 		if (num != 0) tablePrint(num > 0);
 		else waitQueue->print();
-	}
-
-	void tablePrint() {
-		
 	}
 };
