@@ -23,6 +23,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Text Include="test_Original.txt" />
     <Text Include="test.txt" />
   </ItemGroup>
   <ItemGroup>

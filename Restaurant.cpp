@@ -148,9 +148,19 @@ private:
 		//TIMEQUEUE ONLY
 		void blueHelper(int num, imp_res* restaurant) {
 			Node* p = head;
-			int i = 0;
-			for (; p != nullptr; ++i, p = p->next) {
+			for (; p != nullptr && num;) {
+				if (p->isInTable) {
+					Node* toDelete = p;
+					
+					restaurant->tableRemove(toDelete->data);
+					restaurant->waitQueue->removeItem(toDelete->data);
 
+					p = p->next;
+					this->removeItem(toDelete->data);
+
+					--num;
+				}
+				else p = p->next;
 			}
 		}
 
@@ -282,6 +292,7 @@ public:
 	}
 	void addToTable(customer* cus) {
 		count++;
+		timeQueue->get(cus)->isInTable = true;
 
 		if (!lastChange) { // Table empty
 			lastChange = cus;
@@ -334,14 +345,12 @@ public:
 		if (p) {
 			count--;
 			//SET NEW LASTCHANGE
-			if (count == 0) lastChange = nullptr;
-			else {
-				if (p->energy > 0) lastChange = p->next;
-				else lastChange = p->prev;
-			}
 
-			p->next->prev = p->prev;
-			p->prev->next = p->next;
+			if (p->energy > 0) lastChange = p->next;
+			else lastChange = p->prev;
+
+			if (p->next) p->next->prev = p->prev;
+			if (p->prev) p->prev->next = p->next;
 			p->next = p->prev = nullptr;
 			delete p;
 				
@@ -505,7 +514,6 @@ public:
 		timeQueue->domain_expansion(timeQueue->front(), 
 			sorcerersSum < spiritsSum, this, waitQueue);
 	}
-
 
 	void tablePrint(bool cw) {
 		customer* p = lastChange;
