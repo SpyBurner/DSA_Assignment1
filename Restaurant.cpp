@@ -147,6 +147,13 @@ private:
 			return count == 0;
 		}
 
+		//PURPLE
+		void swap(Node* nodei, Node* nodej) {//Only swap data
+			customer* cusTemp = nodei->data;
+			nodei->data = nodej->data;
+			nodej->data = cusTemp;
+		}
+
 		//TIMEQUEUE ONLY
 		void blueHelper(int num, imp_res* restaurant) {
 			Node* p = head;
@@ -249,18 +256,14 @@ private:
 			}
 
 			bool operator<(Node* other) {
-				if (other->data->energy == this->data->energy) {
-					return this->joinTime < other->joinTime;
+				if (abs(other->data->energy) == abs(this->data->energy)) {
+					return this->joinTime > other->joinTime;
 				}
 				else {
-					return this->data->energy < other->data->energy;
+					return abs(this->data->energy) < abs(other->data->energy);
 				}
 			}
-			static void swap(Node* nodei, Node* nodej) {//Only swap data
-				customer* cusTemp = nodei->data;
-				nodei->data = nodej->data;
-				nodej->data = cusTemp;
-			}
+
 		};
 	};
 #pragma endregion
@@ -387,14 +390,14 @@ public:
 		for (int i = incr; i < n; i += incr)
 			for (int j = i; (j >= incr); j -= incr) {
 				//Stop when j-incr <= j
-				QueueModified::Node* nodeAfter = waitQueue->get(j - incr);
-				QueueModified::Node* nodeBefore = waitQueue->get(j);
+				QueueModified::Node* nodejSub = waitQueue->get(j - incr);
+				QueueModified::Node* nodej = waitQueue->get(j);
 
-				//follow forum
-				if (!(nodeAfter < nodeBefore)) break;
+				//follow forum, compare abs
+				if (nodej >= nodejSub) break;
 
 				swapCount++;
-				QueueModified::Node::swap(nodeAfter, nodeBefore);
+				waitQueue->swap(nodejSub, nodej);
 			}
 	}
 
