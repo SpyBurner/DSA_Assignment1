@@ -223,13 +223,9 @@ private:
 				p->data->print();//Print customer
 
 				//Remove customer from all containers
-
-				customer* toDel = p;
-
-				restaurant->tableRemove(p->data);
-				waitQueue->removeItem(p->data);
+				if (p->isInTable) restaurant->tableRemove(p->data);
+				else waitQueue->removeItem(p->data);
 				this->removeItem(p->data);
-
 			}
 		}
 
@@ -572,6 +568,14 @@ public:
 		// sorcerer < spirit == true -> remove sorcerer
 		timeQueue->domain_expansion(timeQueue->front(), 
 			sorcerersSum < spiritsSum, this, waitQueue);
+
+		//copied from num
+		while (!waitQueue->empty() && count < MAXSIZE) {
+			customer* p = waitQueue->front()->getData();
+			customer* cus = new customer(p->name, p->energy, nullptr, nullptr);
+			addToTable(cus);//BY PASS RED CHECK
+			waitQueue->pop();
+		}
 	}
 
 	void tablePrint(bool cw) {
