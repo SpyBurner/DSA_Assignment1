@@ -297,24 +297,31 @@ public:
 		if (!lastChange) { // Table empty
 			lastChange = cus;
 			lastChange->next = lastChange->prev = lastChange; //Cycle
-			return;
 		}
+		else {
+			if (count >= int(MAXSIZE / 2)) lastChange = findHighRES(cus->energy);
 
-		if (count >= int(MAXSIZE / 2)) lastChange = findHighRES(cus->energy);
+			if (cus->energy >= lastChange->energy) { //Add right
+				cus->next = lastChange->next;
+				cus->prev = lastChange;
 
-		if (cus->energy >= lastChange->energy) { //Add right
-			cus->next = lastChange->next;
-			cus->prev = lastChange;
-			lastChange->next = cus;
-		}
-		else {	//Add left
-			cus->prev = lastChange->prev;
-			cus->next = lastChange;
-			lastChange->prev = cus;
+				lastChange->next->prev = cus;
+				lastChange->next = cus;
+			}
+			else {	//Add left
+				cus->prev = lastChange->prev;
+				cus->next = lastChange;
+
+				lastChange->prev->next = cus;
+				lastChange->prev = cus;
+			}
 		}
 
 		lastChange = cus;
 		timeQueue->get(cus)->isInTable = true;
+
+		//DEBUG
+		//cout << lastChange->prev->name << "<-" << lastChange->name << "->" << lastChange->next->name << endl;
 	}
 	void RED(string name, int energy){
 		customer* cus = new customer(name, energy, nullptr, nullptr);
@@ -409,43 +416,70 @@ public:
 	}
 
 	void tableSwap(customer* cus1, customer* cus2) {//SWAP next/prev ONLY
-		customer temp;
-		temp.next = cus1->next;
-		temp.prev = cus1->prev;
-		
-		cus1->next = cus2->next;
+		if (cus1 == cus2) return;//Same node
+
+		if (cus1->prev) cus1->prev->next = cus2;
+		if (cus2->prev) cus2->prev->next = cus1;
+
+		if (cus1->next) cus1->next->prev = cus2;
+		if (cus2->next) cus2->next->prev = cus1;
+
+		customer* temp;
+		temp = cus1->prev;
 		cus1->prev = cus2->prev;
+		cus2->prev = temp;
 
-		cus2->next = temp.next;
-		cus2->prev = temp.prev;
+		temp = cus1->next;
+		cus1->next = cus2->next;
+		cus2->next = temp;
 
-		temp.next = temp.prev = nullptr;
+		temp = nullptr;
 	}
 	void tableReverse(bool positive = true) {
-		int one = 1;
-		if (!positive) one = -1;
+		int one = -1;
+		if (positive) one = 1;
 
-		customer* pCCW = lastChange->prev;
+		cout << "solving for positive: " << positive << endl;
+
+		customer* pCCW = lastChange;
 		customer* pCW = lastChange->next;
 
+		customer* saveLastChange = lastChange;
+
 		int i = 1;
-		while (i <= count) {
-			while (one * pCCW->energy < 0) {
+		while (i < count) {
+			while (one * pCCW->energy < 0 && i < count) {
 				pCCW = pCCW->prev;
 				i++;
 			}
-			while (one * pCW->energy < 0) {
+			cout << "pCCW: " << i << endl;
+			while (one * pCW->energy < 0 && i < count) {
 				pCW = pCW->next;
 				i++;
 			}
+			cout << "pCW: " << i << endl;
+
+			if (pCW->prev == pCCW) break;
 
 			tableSwap(pCCW, pCW);
-			pCCW = pCCW->prev;
-			pCW = pCW->next;
+			
+			if (pCW == lastChange) lastChange = pCCW;
+			if (pCCW == lastChange) lastChange = pCW;
+
+			cout << pCW->name << " " << pCCW->name << endl;
+			cout << lastChange->name << endl;
+			//Nodes swaped -> swap next and prev
+			customer* temp = pCW->prev;
+			pCW = pCCW->next;
+			pCCW = temp;
+
 			i += 2;
 		}
 
-		if (positive) tableReverse(false);
+		if (positive) {
+			tableReverse(false);
+		}
+		lastChange = saveLastChange;
 	}
 	void REVERSAL()
 	{
@@ -456,15 +490,21 @@ public:
 	void tableVoidPrint(customer* start, customer* end, int maxLen) {
 		customer* pMin = start;
 		customer* p = start;
+
+		int minIndex = 0;
+
 		for (int i = 0; i < maxLen; ++i, p = p->next) {
 			//Get first equal
-			if (p->energy < pMin->energy) pMin = p;
+			if (p->energy < pMin->energy) {
+				minIndex = i;
+				pMin = p;
+			}
 		}
 
 		p = pMin;
 		for (int i = 0; i < maxLen; ++i, p = p->next) {
-			if (p == nullptr) p = start;
 			p->print();
+			if (i == maxLen - minIndex - 1) p = start->prev;
 		}
 	}
 	void UNLIMITED_VOID()
@@ -482,7 +522,7 @@ public:
 		for (customer* pI = lastChange; i < count; ++i, pI = pI->next) {
 			sum = len = 0;
 			int j = 0;
-			for (customer* pJ = pI; j < count; ++j, pJ = pJ->next) {
+			for (customer* pJ = pI; j < 2*count; ++j, pJ = pJ->next) {
 				sum += pJ->energy;
 				len++;
 				bool choose = false;
