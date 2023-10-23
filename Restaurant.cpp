@@ -94,6 +94,7 @@ private:
 				i++;
 			}
 
+			if (!p) return 0; //DOMAIN EXPANSION COUNTER
 			if (pPre) {
 				pPre->next = p->next;
 			}
@@ -184,7 +185,7 @@ private:
 			int i = 0;
 			for (; i < count; i++, p = p->next) {
 				//follows forum
-				if (resNode < p) {
+				if (resNode->operator<(p)) {
 					resNode = p;
 					resIndex = i;
 				}
@@ -208,6 +209,7 @@ private:
 			return sum * one;
 		}
 
+		//REMOVE BASE ON TIMEQUEUE
 		void domain_expansion(Node* p, bool positive, 
 			imp_res* restaurant, QueueModified* waitQueue) {
 			//positive -> remove sorcerers
@@ -221,12 +223,15 @@ private:
 				p->data->print();//Print customer
 
 				//Remove customer from all containers
+
+				customer* toDel = p;
+
 				restaurant->tableRemove(p->data);
 				waitQueue->removeItem(p->data);
 				this->removeItem(p->data);
+
 			}
 		}
-		//
 
 		//LIGHT
 		void print(){
@@ -281,7 +286,7 @@ public:
 		timeQueue = new QueueModified();
 	};
 	~imp_res(){
-		tableClear(lastChange);
+		tableClear();
 		delete waitQueue;
 		delete timeQueue;
 	}
@@ -331,7 +336,6 @@ public:
 
 		count++;
 		lastChange = cus;
-		timeQueue->get(cus)->isInTable = true;
 
 		//DEBUG
 		//cout << lastChange->prev->name << "<-" << lastChange->name << "->" << lastChange->next->name << endl;
@@ -352,12 +356,14 @@ public:
 		addToTable(cus);
 	}
 
-	void tableClear(customer* lastChange){
-		if (!lastChange) return;
-		tableClear(lastChange->next);
+	void tableClear(){
+		while (count--){
+			customer* toDel = lastChange;
+			lastChange = lastChange->next;
 
-		lastChange->next = lastChange->prev = nullptr;
-		delete lastChange;
+			toDel->next = toDel->prev = nullptr;
+			delete toDel;
+		}
 	}
 	bool tableRemove(customer* target){
 		if (!lastChange) return false;
@@ -380,10 +386,12 @@ public:
 			if (p->prev) p->prev->next = p->next;
 			p->next = p->prev = nullptr;
 			delete p;
-				
+
+			if (!count) lastChange = nullptr;
+
 			return true;
 		}
-		return false;
+		return false;//DOMAIN EXPANSION COUNTER
 	}
 	void BLUE(int num)
 	{
@@ -409,7 +417,7 @@ public:
 
 				//follow forum, compare abs
 				// if (!(nodej < nodejSub)) break;
-				if (!nodej->operator<(nodejSub)) break;
+				if (!nodejSub->operator<(nodej)) break;
 
 				swapCount++;
 				waitQueue->swap(nodejSub, nodej);
