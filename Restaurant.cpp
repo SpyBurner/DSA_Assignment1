@@ -549,7 +549,7 @@ public:
 		p = pMin;
 		for (int i = 0; i < maxLen; ++i, p = p->next) {
 			p->print();
-			if (i == maxLen - minIndex - 1) p = start->prev;
+			if (p == end) p = start->prev;
 		}
 	}
 	void UNLIMITED_VOID()
