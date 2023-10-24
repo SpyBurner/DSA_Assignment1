@@ -183,7 +183,7 @@ private:
 			}
 		}
 
-		//REVERSAL
+		//PURPLE SORT
 		int findMaxAbsIndex() {
 			Node* p = head;
 			int resIndex = 0;
@@ -192,13 +192,22 @@ private:
 			int i = 0;
 			for (; i < count; i++, p = p->next) {
 				//FORUM DIDNT SAY ABOUT THIS??
-				// if (resNode->operator<(p)) {
-				// 	resNode = p;
-				// 	resIndex = i;
-				// }
-				if (abs(resNode->data->energy) <= abs(p->data->energy)){
-					resNode = p;
-					resIndex = i;
+				int resE, pE;
+				resE = resNode->data->energy;
+				pE = p->data->energy;
+
+				if (abs(resE) <= abs(pE)){
+					bool doSwap = false;
+					if (abs(resE) == abs(pE)){
+						if (resNode->joinTime > p->joinTime)
+							doSwap = true;
+					}
+					else doSwap = true;
+
+					if (doSwap){
+						resNode = p;
+						resIndex = i;
+					}
 				}
 			}
 
@@ -280,9 +289,7 @@ private:
 				if (abs(other->data->energy) == abs(this->data->energy)) {
 					return this->joinTime > other->joinTime;
 				}
-				else {
-					return abs(this->data->energy) < abs(other->data->energy);
-				}
+				else return abs(this->data->energy) < abs(other->data->energy);
 			}
 
 		};
@@ -430,7 +437,11 @@ public:
 				QueueModified::Node* nodej = waitQueue->get(j);
 
 				//follow forum, compare abs
+				//nodejSub >= nodej -> break;
 				if (!nodejSub->operator<(nodej)) break;
+				
+				// dbg(incr);
+				// dbg(to_string(nodejSub->getData()->energy) + "<->" + to_string(nodej->getData()->energy));
 
 				swapCount++;
 				waitQueue->swap(nodejSub, nodej);
