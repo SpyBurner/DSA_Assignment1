@@ -30,7 +30,7 @@ private:
 			while (count) removeAt(0);
 		}
 
-		bool push(customer* target) {
+		bool push(customer* target, bool isInTable = false) {
 			customer* cus = new customer(target->name, target->energy, nullptr, nullptr);
 			if (count == 2 * MAXSIZE) return false;
 			if (!head) {
@@ -40,6 +40,8 @@ private:
 				tail->next = new Node(cus, joinTime++);
 				tail = tail->next;
 			}
+
+			tail->isInTable = isInTable;
 
 			count++;
 			return true;
@@ -157,6 +159,11 @@ private:
 			customer* cusTemp = nodei->data;
 			nodei->data = nodej->data;
 			nodej->data = cusTemp;
+
+			//:)))
+			int jt = nodei->joinTime;
+			nodei->joinTime = nodej->joinTime;
+			nodej->joinTime = jt;
 		}
 
 		//TIMEQUEUE ONLY
@@ -184,8 +191,12 @@ private:
 
 			int i = 0;
 			for (; i < count; i++, p = p->next) {
-				//follows forum
-				if (resNode->operator<(p)) {
+				//FORUM DIDNT SAY ABOUT THIS??
+				// if (resNode->operator<(p)) {
+				// 	resNode = p;
+				// 	resIndex = i;
+				// }
+				if (abs(resNode->data->energy) <= abs(p->data->energy)){
 					resNode = p;
 					resIndex = i;
 				}
@@ -206,27 +217,33 @@ private:
 			for (Node* p = head; p != nullptr; p = p->next)
 				if (one * p->data->energy > 0) sum += p->data->energy;
 			
-			return sum * one;
+			return sum;
 		}
-
-		//REMOVE BASE ON TIMEQUEUE
+		//REMOVE BASED ON TIMEQUEUE
 		void domain_expansion(Node* p, bool positive, 
 			imp_res* restaurant, QueueModified* waitQueue) {
 			//positive -> remove sorcerers
 			if (!p) return;
-			domain_expansion(p->next, positive, restaurant, waitQueue);
 
-			int one = -1;
-			if (positive) one = 1;
+			//Save before del
+			Node* pAdvance = p->next;
+			customer newCus(p->data->name, p->data->energy, nullptr, nullptr);
 
-			if (one * p->data->energy > 0) {
-				p->data->print();//Print customer
+			int one = 1;
+			if (positive) one = -1;
+
+			if (one * p->data->energy < 0) {
 
 				//Remove customer from all containers
 				if (p->isInTable) restaurant->tableRemove(p->data);
 				else waitQueue->removeItem(p->data);
 				this->removeItem(p->data);
+				domain_expansion(pAdvance, positive, restaurant, waitQueue);
+				//Print customer
+				newCus.print();
 			}
+			else
+			domain_expansion(pAdvance, positive, restaurant, waitQueue);
 		}
 
 		//LIGHT
@@ -343,12 +360,13 @@ public:
 		if (timeQueue->indexOf(cus) != -1) return;//Check name
 		if (waitQueue->getSize() == MAXSIZE) return;//Fully full
 
-		timeQueue->push(cus);//Always add to timeline
+		timeQueue->push(cus, count < MAXSIZE);
 
 		if (count == MAXSIZE) {
 			waitQueue->push(cus);
 			return;
 		}
+
 		addToTable(cus);
 	}
 
@@ -412,7 +430,6 @@ public:
 				QueueModified::Node* nodej = waitQueue->get(j);
 
 				//follow forum, compare abs
-				// if (!(nodej < nodejSub)) break;
 				if (!nodejSub->operator<(nodej)) break;
 
 				swapCount++;
@@ -435,9 +452,12 @@ public:
 #pragma endregion
 	void PURPLE()
 	{
+		//
 		int N = shellSort();
-
-		BLUE(N);
+		//DEBUG
+		// N = 0;
+		// cout << "N: " << N << endl;
+		BLUE(N % MAXSIZE);
 	}
 
 	void tableSwap(customer* cus1, customer* cus2) {//SWAP next/prev ONLY
@@ -538,6 +558,7 @@ public:
 			sum = len = 0;
 			int j = 0;
 			for (customer* pJ = pI; j < 2*count; ++j, pJ = pJ->next) {
+				if (len >= count) break;
 				sum += pJ->energy;
 				len++;
 				bool choose = false;
@@ -564,7 +585,8 @@ public:
 		//Print removed in descending joinTime (recursive);
 
 		int sorcerersSum = timeQueue->energySum(true);
-		int spiritsSum = abs(timeQueue->energySum(false));
+		int spiritsSum = abs(sorcerersSum + timeQueue->energySum(false));
+
 		// sorcerer < spirit == true -> remove sorcerer
 		timeQueue->domain_expansion(timeQueue->front(), 
 			sorcerersSum < spiritsSum, this, waitQueue);
