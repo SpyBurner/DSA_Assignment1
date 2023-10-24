@@ -189,22 +189,20 @@ private:
 			int resIndex = 0;
 			Node* resNode = head;
 
-			int i = 0;
-			for (; i < count; i++, p = p->next) {
-				//FORUM DIDNT SAY ABOUT THIS??
+			for (int i = 0; i < count; i++, p = p->next) {
 				int resE, pE;
 				resE = resNode->data->energy;
 				pE = p->data->energy;
 
 				if (abs(resE) <= abs(pE)){
-					bool doSwap = false;
+					bool choose = false;
 					if (abs(resE) == abs(pE)){
-						if (resNode->joinTime > p->joinTime)
-							doSwap = true;
+						if (resNode->joinTime < p->joinTime)
+							choose = true;
 					}
-					else doSwap = true;
+					else choose = true;
 
-					if (doSwap){
+					if (choose){
 						resNode = p;
 						resIndex = i;
 					}
@@ -429,12 +427,12 @@ public:
 
 #pragma region shellsort
 
-	void inssort2(int n, int incr) {
+	void inssort2(int start, int n, int incr) {
 		for (int i = incr; i < n; i += incr)
 			for (int j = i; (j >= incr); j -= incr) {
 				//Stop when j-incr <= j
-				QueueModified::Node* nodejSub = waitQueue->get(j - incr);
-				QueueModified::Node* nodej = waitQueue->get(j);
+				QueueModified::Node* nodejSub = waitQueue->get(start + j - incr);
+				QueueModified::Node* nodej = waitQueue->get(start + j);
 
 				//follow forum, compare abs
 				//nodejSub >= nodej -> break;
@@ -455,8 +453,8 @@ public:
 
 		for (int i = n / 2; i > 2; i /= 2) // For each increment
 			for (int j = 0; j < i; j++) // Sort each sublist
-				inssort2(n - j, i);
-		inssort2(n, 1);
+				inssort2(j, n - j, i);
+		inssort2(0, n, 1);
 
 		return swapCount;
 	}
@@ -465,9 +463,11 @@ public:
 	{
 		//
 		int N = shellSort();
+
 		//DEBUG
 		// N = 0;
-		// cout << "N: " << N << endl;
+		// dbg("N: " + to_string(N));
+
 		BLUE(N % MAXSIZE);
 	}
 
@@ -480,7 +480,6 @@ public:
 
 		cus1->prev->next = cus1;
 		cus2->prev->next = cus2;
-
 	
 		temp = cus1->next;
 		cus1->next = cus2->next;
