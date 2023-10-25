@@ -596,7 +596,12 @@ public:
 		//Print removed in descending joinTime (recursive);
 
 		int sorcerersSum = timeQueue->energySum(true);
-		int spiritsSum = abs(sorcerersSum + timeQueue->energySum(false));
+
+		//
+		//int spiritsSum = abs(sorcerersSum + timeQueue->energySum(false));
+		
+		//NEW REQUIREMENT
+		int spiritsSum = abs(timeQueue->energySum(false));
 
 		// sorcerer < spirit == true -> remove sorcerer
 		timeQueue->domain_expansion(timeQueue->front(), 
