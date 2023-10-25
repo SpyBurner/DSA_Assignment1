@@ -43,6 +43,7 @@ void simulate(string filename, imp_res* r)
         else // LIGHT <NUM>
         {
             ss >> num;
+            cout << "LIGHT " << num << endl;
             r->LIGHT(stoi(num));
         }
     }
@@ -50,17 +51,14 @@ void simulate(string filename, imp_res* r)
 }
 
 int main(int argc, char* argv[]) {
-    // _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    //if (argc < 2)
-    //	return 1;
-    //  string fileName = argv[1];
+     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     imp_res* r = new imp_res();
     string fileName = "test.txt";
     simulate(fileName, r);
     delete r;
 
 
-    // _CrtDumpMemoryLeaks();
+     _CrtDumpMemoryLeaks();
     return 0;
 }
 
