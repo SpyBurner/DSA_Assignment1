@@ -1,6 +1,11 @@
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #ifndef RESTAURANT_H
 #define RESTAURANT_H
 #include <iostream>
+
 #include <string>
 #include <math.h>
 

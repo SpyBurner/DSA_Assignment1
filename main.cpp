@@ -50,6 +50,8 @@ void simulate(string filename, imp_res* r)
 }
 
 int main(int argc, char* argv[]) {
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
     //if (argc < 2)
     //	return 1;
     //  string fileName = argv[1];
@@ -57,6 +59,9 @@ int main(int argc, char* argv[]) {
     string fileName = "test.txt";
     simulate(fileName, r);
     delete r;
+
+    _CrtDumpMemoryLeaks();
+
     return 0;
 }
 
