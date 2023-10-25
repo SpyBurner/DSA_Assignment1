@@ -117,11 +117,11 @@ private:
 		Node* front() {
 			return head;
 		}
-		int indexOf(customer* target) {
+		int indexOf(string name) {
 			Node* p = head;
 			int i = 0;
 			while (p && i < count) {
-				if (p->data->name == target->name) return i;
+				if (p->data->name == name) return i;
 				i++;
 				p = p->next;
 			}
@@ -270,7 +270,7 @@ private:
 			bool isInTable;
 			friend class QueueModified;
 			Node(customer* data, int joinTime = 0, Node* next = nullptr) {
-				this->data = new customer(*data);
+				this->data = data;
 				this->joinTime = joinTime;
 				this->next = next;
 				isInTable = false;
@@ -359,16 +359,17 @@ public:
 		//cout << lastChange->prev->name << "<-" << lastChange->name << "->" << lastChange->next->name << endl;
 	}
 	void RED(string name, int energy){
-		customer* cus = new customer(name, energy, nullptr, nullptr);
-
 		if (energy == 0) return;//Deny normies
-		if (timeQueue->indexOf(cus) != -1) return;//Check name
 		if (waitQueue->getSize() == MAXSIZE) return;//Fully full
+		if (timeQueue->indexOf(name) != -1) return;
+
+		customer* cus = new customer(name, energy, nullptr, nullptr);
 
 		timeQueue->push(cus, count < MAXSIZE);
 
 		if (count == MAXSIZE) {
 			waitQueue->push(cus);
+			delete cus;
 			return;
 		}
 
